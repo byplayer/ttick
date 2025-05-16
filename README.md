@@ -7,7 +7,7 @@ This is [ticktick](https://ticktick.com/) cli client, written by golang.
 The [ticktick](https://ticktick.com/) is a ToDo service.
 This program provides command line interface for [ticktick](https://ticktick.com/).
 
-## Demo (with[fzf](https://github.com/junegunn/fzf))
+## Demo (with [fzf](https://github.com/junegunn/fzf))
 
 TODO: prepare demo screen image
 
