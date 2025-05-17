@@ -10,6 +10,8 @@ DEPENDS := VERSION
 SOURCEDIR     = ./cmd ./internal
 TSOURCEDIR    = ./test
 
+MAIN_SRC = cmd/ttick/ttick.go
+
 BUILD_FLAG = -trimpath
 LDFLAGS = -s -w -X 'github.com/byplayer/ttick/internal/cmd/ttick.version=$(VERSION) $(GIT_HASH)'
 
@@ -28,7 +30,7 @@ SRCLIST     = $(foreach srcdir, $(SRCDIRLIST), $(wildcard $(srcdir)/*.go))
 TSRCLIST    = $(foreach testsrcdir, $(TSRCDIRLIST), $(wildcard $(testsrcdir)/*.go))
 
 $(PROGRAM): $(SRCLIST) $(DEPENDS)
-	go build -ldflags="$(LDFLAGS)" $(BUILD_FLAG) $(SRC)
+	go build -ldflags="$(LDFLAGS)" $(BUILD_FLAG) $(MAIN_SRC)
 
 .PHONY: build
 build: $(PROGRAM)
@@ -36,3 +38,5 @@ build: $(PROGRAM)
 .PHONY: clean
 clean:
 	rm -f $(PROGRAM)
+
+.DEFAULT_GOAL := build
