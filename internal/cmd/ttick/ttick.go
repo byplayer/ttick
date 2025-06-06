@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/byplayer/ttick/internal/util"
 	"github.com/rkoesters/xdg/basedir"
@@ -22,9 +23,35 @@ const (
 	appUsage   = "ticktick CLI Client"
 	configName = "config"
 	configType = "json"
+
+	defaultShortDateFormat     = "06/01/02(Mon)"
+	defaultShortDatetimeFormat = "06/01/02(Mon) 15:04"
 )
 
-func AppBeforeHook(c *cli.Context) error {
+func CheckConfigPermission(configFile string) error {
+	if exists, _ := util.Exists(configFile); exists {
+		// Ensure that the config file has permission 0600, because it contains
+		// the API token and should only be read by the user.
+		// This is only necessary iff the config file exists, which may not be the case
+		// when config is loaded from environment variables.
+		fi, err := os.Lstat(configFile)
+		if err != nil {
+			return fmt.Errorf("fatal error config file: %s", err)
+		}
+		if runtime.GOOS != "windows" && fi.Mode().Perm() != 0600 {
+			return fmt.Errorf("config file has wrong permissions(%o). \nMake sure to give permissions 600 to file %s",
+				fi.Mode().Perm(), configFile)
+		}
+	}
+
+	return nil
+}
+
+func loadConfig(c *cli.Context) error {
+	viper.SetDefault("ShortDateFormat", defaultShortDateFormat)
+	viper.SetDefault("ShortDatetimeFormat", defaultShortDatetimeFormat)
+	viper.SetDefault("color", true)
+
 	viper.SetConfigType(configType)
 	viper.SetConfigName(configName)
 	viper.AddConfigPath(configPath)
@@ -57,6 +84,25 @@ func AppBeforeHook(c *cli.Context) error {
 				panic(fmt.Errorf("fatal error config file: %s", err))
 			}
 		}
+	}
+
+	if err := CheckConfigPermission(configFile); err != nil {
+		return err
+	}
+
+	config := &Config{
+		AccessToken:    viper.GetString("token"),
+		DebugMode:      c.Bool("debug"),
+		Color:          viper.GetBool("color"),
+		DateFormat:     viper.GetString("ShortDateFormat"),
+		DateTimeFormat: viper.GetString("ShortDatetimeFormat")}
+
+	return nil
+}
+
+func AppBeforeHook(c *cli.Context) error {
+	if err := loadConfig(c); err != nil {
+		return err
 	}
 
 	return nil

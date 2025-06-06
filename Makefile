@@ -12,11 +12,16 @@ TSOURCEDIR    = ./test
 
 MAIN_SRC = cmd/ttick/ttick.go
 
-BUILD_FLAG = -trimpath
-LDFLAGS = -s -w -X 'github.com/byplayer/ttick/internal/cmd/ttick.version=$(VERSION) $(GIT_HASH)'
-
 PROGRAM_NAME := ttick
 PROGRAM := $(PROGRAM_NAME)
+
+ifeq ($(DEBUG),1)
+BUILD_FLAG =
+LDFLAGS = -ldflags="-X 'github.com/byplayer/ttick/internal/cmd/ttick.version=$(VERSION) $(GIT_HASH) debug'"
+else
+BUILD_FLAG = -trimpath
+LDFLAGS = -ldflags="-s -w -X 'github.com/byplayer/ttick/internal/cmd/ttick.version=$(VERSION) $(GIT_HASH)'"
+endif
 
 ###
 # 処理部
@@ -30,7 +35,11 @@ SRCLIST     = $(foreach srcdir, $(SRCDIRLIST), $(wildcard $(srcdir)/*.go))
 TSRCLIST    = $(foreach testsrcdir, $(TSRCDIRLIST), $(wildcard $(testsrcdir)/*.go))
 
 $(PROGRAM): $(SRCLIST) $(DEPENDS)
-	go build -ldflags="$(LDFLAGS)" $(BUILD_FLAG) $(MAIN_SRC)
+	go build -o $(PROGRAM) $(LDFLAGS) $(BUILD_FLAG) $(MAIN_SRC)
+
+.PHONY: run
+run: $(SRCLIST) $(DEPENDS)
+	go run $(MAIN_SRC)
 
 .PHONY: build
 build: $(PROGRAM)
